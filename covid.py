@@ -1,6 +1,7 @@
 from urllib.request import *
 from json import *
 from requests import *
+from sys import argv
 # from matplotlib import pyplot as plt
 # # import termplotlib as tpl
 # # import gnuplotlib as gpl
@@ -27,12 +28,18 @@ def get_new_cases()	:
 	# json = response_daily.json()
 	# print(json['todayCases'])
 
-
-	response_last_month = get('https://disease.sh/v3/covid-19/nyt/states/California?lastdays=360')
+	days = 360
+	if len(argv) > 1:
+		days = int(argv[1]) + 1
+	if days > 120:
+		day_tick = 30
+	else:
+		day_tick = 10
+	response_last_month = get('https://disease.sh/v3/covid-19/nyt/states/California?lastdays=' + str(days))
 	month_json = response_last_month.json()
 
 	case_list = [day['cases'] for day in month_json]
-	date_list = [-i for i in range(360,0,-1)]
+	date_list = [-i for i in range(len(case_list),0,-1)]
 	date_list.pop(0)
 	# print(case_list)
 	new_cases = [case_list[i+1] - case_list[i] for i in range(len(case_list) - 1)]
@@ -41,8 +48,9 @@ def get_new_cases()	:
 	tplt.plot(date_list, new_cases,fillx=True)
 	tplt.title("California's New Covid Cases")
 	tplt.xlabel('Days Ago')
+	tplt.xticks([i for i in date_list if i%day_tick == 0])
 	tplt.ylabel('New Cases')
-	tplt.ylim(0, 80000)
+	tplt.ylim(0, max(new_cases))
 	tplt.show()
 
 	# tplt.plot(new_cases[-30:])
